@@ -118,6 +118,7 @@ func errorNohup() {
 		}
 
 		ctx := context.Background()
+		args = fmt.Sprintf("%s > /root/log 2>&1 &",args)
 		response := cl.Run(ctx, path.Join(util.GetProgramPath(), "strace"), args)
 
 		if !response.Success {
