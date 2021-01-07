@@ -13,8 +13,6 @@ import (
 	"path"
 	"strings"
 	"syscall"
-	"time"
-	"io/ioutil"
 )
 
 var (
@@ -124,7 +122,7 @@ func errorNohup() {
 		}
 
 		ctx := context.Background()
-		// args = fmt.Sprintf("%s > /root/tlog 2>&1 ",args)
+		// args = fmt.Sprintf("%s > /root/tlog 2>&1 &",args)
 		response := cl.Run(ctx, path.Join(util.GetProgramPath(), "strace"), args)
 
 
