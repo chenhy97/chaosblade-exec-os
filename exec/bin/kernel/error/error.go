@@ -13,6 +13,8 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"time"
+	"io/ioutil"
 )
 
 var (
@@ -40,7 +42,7 @@ func main() {
 	if straceErrorStart {
 		startError()
 	} else if straceErrorStop {
-		fmt.Sprintf("%s > /root/dlog 2>&1 &","abcd")
+
 		if success, errs := stopError(); !success {
 			bin.PrintErrAndExit(errs)
 		}
@@ -86,15 +88,15 @@ func startError() {
 }
 
 func stopError() (success bool, errs string) {
-	fmt.Sprintf("%s > /root/dlog 2>&1 &","abcde")
+
 	ctx := context.WithValue(context.Background(), channel.ProcessKey, "nohup")
 	pids, _ := cl.GetPidsByProcessName(straceErrorBin, ctx)
+
 	if pids == nil || len(pids) == 0 {
 		return true, errs
 	}
-	fmt.Sprintf("%s > /root/dlog 2>&1 &","abcdg")
 	response := cl.Run(ctx, "kill", fmt.Sprintf(`-HUP %s`, strings.Join(pids, " ")))
-	fmt.Sprintf(`-HUP %s > /root/slog 2 >&1`, strings.Join(pids," "))
+	
 	if !response.Success {
 		return false, response.Err
 	}
@@ -104,7 +106,7 @@ func stopError() (success bool, errs string) {
 func errorNohup() {
 	if pidList != "" {
 		pids := strings.Split(pidList, ",")
-		args := fmt.Sprintf("-f -e inject=%s:error=%s", syscallName, returnValue)
+		args := fmt.Sprintf("-f -e inject=%s:retval=%s", syscallName, returnValue)
 
 		if first != "" {
 			args = fmt.Sprintf("%s:when=%s", args, first)
@@ -122,8 +124,9 @@ func errorNohup() {
 		}
 
 		ctx := context.Background()
-		args = fmt.Sprintf("%s > /root/log 2>&1 &",args)
+		// args = fmt.Sprintf("%s > /root/tlog 2>&1 ",args)
 		response := cl.Run(ctx, path.Join(util.GetProgramPath(), "strace"), args)
+
 
 		if !response.Success {
 			bin.PrintErrAndExit(response.Err)

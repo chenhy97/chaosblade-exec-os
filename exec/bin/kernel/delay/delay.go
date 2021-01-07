@@ -12,7 +12,6 @@ import (
 	"path"
 	"strings"
 	"syscall"
-
 	"github.com/chenhy97/chaosblade-exec-os/exec/bin"
 )
 
@@ -20,7 +19,7 @@ var (
 	straceDelayStart, straceDelayStop, straceDelayNohup bool
 	debug bool
 	pidList string
-	time string
+	flagtime string
 	syscallName string
 	delayLoc string
 	first, end, step string
@@ -33,7 +32,7 @@ func main() {
 	flag.BoolVar(&straceDelayStop, "stop", false, "stop delay syscall")
 	flag.BoolVar(&straceDelayNohup, "nohup", false, "nohup to run delay syscall")
 	flag.StringVar(&pidList, "pid", "", "pids of affected processes")
-	flag.StringVar(&time, "time", "", "duration of delay")
+	flag.StringVar(&flagtime, "time", "", "duration of delay")
 	flag.StringVar(&syscallName, "syscall-name", "", "delayed syscall")
 	flag.StringVar(&delayLoc, "delay-loc", "enter", "delay position")
 	flag.StringVar(&first, "first", "", "the first delayed syscall")
@@ -72,9 +71,9 @@ func delayNohup() {
 
 		var args = ""
 		if delayLoc == "enter" {
-			args = fmt.Sprintf("-f -e inject=%s:delay_enter=%s", syscallName, time)
+			args = fmt.Sprintf("-f -e inject=%s:delay_enter=%s", syscallName, flagtime)
 		} else if delayLoc == "exit" {
-			args = fmt.Sprintf("-f -e inject=%s:delay_exit=%s", syscallName, time)
+			args = fmt.Sprintf("-f -e inject=%s:delay_exit=%s", syscallName, flagtime)
 		}
 
 		if first != "" {
@@ -93,6 +92,7 @@ func delayNohup() {
 		}
 
 		ctx := context.Background()
+		// args = fmt.Sprintf("%s > /root/delaytlog 2>&1 ",args)
 		response := cl.Run(ctx, path.Join(util.GetProgramPath(), "strace"), args)
 
 		if !response.Success {
@@ -105,7 +105,7 @@ func delayNohup() {
 
 func startDelay() {
 	args := fmt.Sprintf("%s --nohup --pid %s --time %s --syscall-name %s --delay-loc %s",
-		path.Join(util.GetProgramPath(), straceDelayBin), pidList, time, syscallName, delayLoc)
+		path.Join(util.GetProgramPath(), straceDelayBin), pidList, flagtime, syscallName, delayLoc)
 
 	if first != "" {
 		 args = fmt.Sprintf("%s --first %s", args, first)
@@ -135,6 +135,8 @@ func stopDelay() (success bool, errs string) {
 	if pids == nil || len(pids) == 0 {
 		return true, errs
 	}
+
+
 	response := cl.Run(ctx, "kill", fmt.Sprintf(`-HUP %s`, strings.Join(pids, " ")))
 	if !response.Success {
 		return false, response.Err
