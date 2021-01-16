@@ -94,7 +94,6 @@ func stopError() (success bool, errs string) {
 		return true, errs
 	}
 	response := cl.Run(ctx, "kill", fmt.Sprintf(`-HUP %s`, strings.Join(pids, " ")))
-	
 	if !response.Success {
 		return false, response.Err
 	}
